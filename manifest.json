@@ -1,0 +1,10 @@
+{
+  "id": "line-remover",
+  "name": "Line Remover",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Remove even or odd lines from the current note with one click.",
+  "author": "You",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}
