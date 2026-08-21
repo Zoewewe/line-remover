@@ -1,8 +1,7 @@
 const { Plugin, Notice, MarkdownView, PluginSettingTab, Setting } = require("obsidian");
 
 const DEFAULT_SETTINGS = {
-  startLine: 1,   // 1-indexed line to start counting from
-  interval: 3,    // remove every Nth line counting from startLine
+  prefix: "<!--SR:!", // any line starting with this text gets removed
 };
 
 class LineRemoverSettingTab extends PluginSettingTab {
@@ -18,31 +17,16 @@ class LineRemoverSettingTab extends PluginSettingTab {
     containerEl.createEl("h2", { text: "Line Remover Settings" });
 
     new Setting(containerEl)
-      .setName("Start line")
-      .setDesc("Line number to start counting from (1 = first line of the note).")
-      .addText((text) =>
-        text
-          .setPlaceholder("1")
-          .setValue(String(this.plugin.settings.startLine))
-          .onChange(async (value) => {
-            const n = parseInt(value, 10);
-            this.plugin.settings.startLine = isNaN(n) || n < 1 ? 1 : n;
-            await this.plugin.saveSettings();
-          })
-      );
-
-    new Setting(containerEl)
-      .setName("Remove every Nth line")
+      .setName("Line prefix to remove")
       .setDesc(
-        "E.g. 3 removes every 3rd line counting from the start line (the start line itself is kept, then every 3rd line after it is removed)."
+        'Any line that starts with this text (leading whitespace is ignored when matching) will be deleted. Example: "<!--SR:!"'
       )
       .addText((text) =>
         text
-          .setPlaceholder("3")
-          .setValue(String(this.plugin.settings.interval))
+          .setPlaceholder("<!--SR:!")
+          .setValue(this.plugin.settings.prefix)
           .onChange(async (value) => {
-            const n = parseInt(value, 10);
-            this.plugin.settings.interval = isNaN(n) || n < 1 ? 1 : n;
+            this.plugin.settings.prefix = value;
             await this.plugin.saveSettings();
           })
       );
@@ -82,24 +66,23 @@ module.exports = class LineRemoverPlugin extends Plugin {
       return;
     }
 
-    const { startLine, interval } = this.settings;
+    const prefix = this.settings.prefix;
+    if (!prefix) {
+      new Notice("Set a line prefix in Line Remover settings first.");
+      return;
+    }
+
     const editor = view.editor;
     const lines = editor.getValue().split("\n");
 
     let removedCount = 0;
-    const kept = lines.filter((_, idx) => {
-      const lineNumber = idx + 1; // 1-indexed
-      if (lineNumber < startLine) return true; // untouched before start line
-      const offset = lineNumber - startLine; // 0 at startLine
-      const shouldRemove = offset % interval === 0 && offset !== 0;
-      // offset === 0 is the start line itself -> always kept
+    const kept = lines.filter((line) => {
+      const shouldRemove = line.trimStart().startsWith(prefix);
       if (shouldRemove) removedCount++;
       return !shouldRemove;
     });
 
     editor.setValue(kept.join("\n"));
-    new Notice(
-      `Removed ${removedCount} line(s) (every ${interval} line(s) starting after line ${startLine}).`
-    );
+    new Notice(`Removed ${removedCount} line(s) starting with "${prefix}".`);
   }
 };

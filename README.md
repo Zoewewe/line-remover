@@ -1,15 +1,14 @@
 # Line Remover (Obsidian Plugin)
 
-Adds a scissors icon to the left ribbon. Click it and it removes lines from
-the currently open note based on two settings you configure yourself:
+Adds a scissors icon to the left ribbon. Click it and it removes every line
+in the currently open note that starts with a text snippet you configure.
 
-- **Start line** — which line to start counting from (1 = first line).
-- **Remove every Nth line** — e.g. set to 3 and it removes every 3rd line
-  after the start line.
+- **Line prefix to remove** — any line whose content (after ignoring
+  leading whitespace) starts with this text gets deleted. Example:
+  `<!--SR:!` would delete every Spaced Repetition scheduling comment line.
 
-Example: Start line = 1, interval = 3 → keeps line 1, removes line 4, keeps
-2 and 3, removes line 7, and so on (every 3rd line counting from the start
-line is removed; the start line itself is always kept).
+Matching is case-sensitive and only checks the beginning of the line — the
+rest of the line's content doesn't matter.
 
 Also adds a command palette entry: "Remove lines (per settings)", with a
 default hotkey of **Shift + Backspace**.
@@ -31,9 +30,9 @@ will flag it in that same pane — just reassign it there.
 
 Settings → Community plugins → Line Remover (click the gear icon next to
 it, or find "Line Remover Settings" in the left sidebar under plugin
-settings). Set your **Start line** and **Remove every Nth line** values
-there — they're saved automatically and used every time you click the
-ribbon icon or run the command.
+settings). Set your **Line prefix to remove** value there — it's saved
+automatically and used every time you click the ribbon icon or run the
+command.
 
 ## Install (manual, no build step needed)
 
@@ -44,11 +43,17 @@ ribbon icon or run the command.
 4. In Obsidian: Settings → Community plugins → make sure "Restricted mode"
    is off → find "Line Remover" in the list → toggle it on.
 5. You should now see a scissors icon in the left ribbon, and a "Line
-   Remover" entry under plugin settings where you can set Start line and
-   interval.
+   Remover" entry under plugin settings where you can set the prefix.
 
 No npm install or build required — this plugin is plain JS that Obsidian
 loads directly.
+
+## Upgrading from the interval-based version (1.x)
+
+The settings schema changed: `startLine` and `interval` are no longer used,
+replaced by a single `prefix` string. After updating `main.js`, open the
+plugin settings and set your prefix (e.g. `<!--SR:!`) — old settings data
+is simply ignored.
 
 ## Uninstall
 

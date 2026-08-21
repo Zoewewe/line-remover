@@ -1,9 +1,9 @@
 {
   "id": "line-remover",
   "name": "Line Remover",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "minAppVersion": "0.15.0",
-  "description": "Remove even or odd lines from the current note with one click.",
+  "description": "Remove any line that starts with a text you configure (e.g. \"<!--SR:!\") from the current note with one click.",
   "author": "You",
   "authorUrl": "",
   "isDesktopOnly": false
