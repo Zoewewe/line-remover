@@ -1,7 +1,7 @@
 const { Plugin, Notice, MarkdownView, PluginSettingTab, Setting } = require("obsidian");
 
 const DEFAULT_SETTINGS = {
-  prefix: "<!--SR:!", // any line starting with this text gets removed
+  searchText: "<!--SR:!", // any line CONTAINING this text gets deleted
 };
 
 class LineRemoverSettingTab extends PluginSettingTab {
@@ -17,16 +17,16 @@ class LineRemoverSettingTab extends PluginSettingTab {
     containerEl.createEl("h2", { text: "Line Remover Settings" });
 
     new Setting(containerEl)
-      .setName("Line prefix to remove")
+      .setName("Text to search for")
       .setDesc(
-        'Any line that starts with this text (leading whitespace is ignored when matching) will be deleted. Example: "<!--SR:!"'
+        "Any line containing this text ANYWHERE in it will be deleted when you run the command. Example: \"<!--SR:!\""
       )
       .addText((text) =>
         text
           .setPlaceholder("<!--SR:!")
-          .setValue(this.plugin.settings.prefix)
+          .setValue(this.plugin.settings.searchText)
           .onChange(async (value) => {
-            this.plugin.settings.prefix = value;
+            this.plugin.settings.searchText = value;
             await this.plugin.saveSettings();
           })
       );
@@ -37,13 +37,13 @@ module.exports = class LineRemoverPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
 
-    this.addRibbonIcon("scissors", "Line Remover: remove lines", () => {
+    this.addRibbonIcon("scissors", "Delete lines containing search text", () => {
       this.removeLines();
     });
 
     this.addCommand({
       id: "remove-lines",
-      name: "Remove lines (per settings)",
+      name: "Delete lines containing search text",
       hotkeys: [{ modifiers: ["Shift"], key: "Backspace" }],
       callback: () => this.removeLines(),
     });
@@ -66,9 +66,9 @@ module.exports = class LineRemoverPlugin extends Plugin {
       return;
     }
 
-    const prefix = this.settings.prefix;
-    if (!prefix) {
-      new Notice("Set a line prefix in Line Remover settings first.");
+    const searchText = this.settings.searchText;
+    if (!searchText) {
+      new Notice("Set the search text in Line Remover settings first.");
       return;
     }
 
@@ -77,12 +77,12 @@ module.exports = class LineRemoverPlugin extends Plugin {
 
     let removedCount = 0;
     const kept = lines.filter((line) => {
-      const shouldRemove = line.trimStart().startsWith(prefix);
+      const shouldRemove = line.includes(searchText);
       if (shouldRemove) removedCount++;
       return !shouldRemove;
     });
 
     editor.setValue(kept.join("\n"));
-    new Notice(`Removed ${removedCount} line(s) starting with "${prefix}".`);
+    new Notice(`Removed ${removedCount} line(s) containing "${searchText}".`);
   }
 };
